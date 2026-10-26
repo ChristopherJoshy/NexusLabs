@@ -6,9 +6,9 @@ NexusLabs is an independent, monochrome student app for SJCET Palai. It presents
 
 ## Current scope
 
-The app includes student sign-in, a home view, attendance, timetable, assignments, notices, materials, fee information, results, local assignment reminders, Privacy, and About screens. Availability depends on the signed-in account and data returned by Etlab.
+The app includes student sign-in, a home view, attendance, timetable, assignments, notices, materials, fee information, results, local assignment reminders, Privacy, and About screens. The Results screen covers Internal, Assignment, Module test, Seasonal, Self study, Tutorial, Series, and University categories with semester selection. Availability depends on the signed-in account and data returned by Etlab.
 
-The product is being expanded toward complete student-facing Etlab coverage, including all results categories and fee payments. Fee payment initiation and some results categories are not yet implemented, so the current app must not be treated as a complete replacement for Etlab.
+The product is being expanded toward complete student-facing Etlab coverage. Fee payment initiation and the separate exam-registration result flow are still being developed, so the current app must not be treated as a complete replacement for Etlab.
 
 ## Technology
 

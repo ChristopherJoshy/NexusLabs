@@ -4,11 +4,21 @@ import { resolveHttpUrl } from '@/lib/url';
 import { apiRequest, normalizeBaseUrl } from './client';
 import { ENDPOINTS, SJCET_BASE_URL, SJCET_COLLEGE } from './endpoints';
 import { asText, firstText, rowsFrom, type JsonRecord } from './parse.ts';
-import { normalizeInternalMarks, normalizeSeriesExams } from './results.ts';
+import {
+  normalizeAssignmentResults,
+  normalizeInternalMarks,
+  normalizeModuleTestResults,
+  normalizeSeasonalResults,
+  normalizeSelfStudyResults,
+  normalizeSemesters,
+  normalizeSeriesExams,
+  normalizeTutorialResults,
+  normalizeUniversityResult,
+  resultRequest,
+} from './results.ts';
 import type {
   Assignment,
   AssignmentResponse,
-  AcademicRecord,
   AttendanceResponse,
   Dashboard,
   FeeRecord,
@@ -16,7 +26,9 @@ import type {
   LeaveRecord,
   Notice,
   NoticeResponse,
-  SeriesExam,
+  ResultCategory,
+  ResultData,
+  Semester,
   Session,
   SubjectAttendance,
   TimetableDay,
@@ -300,21 +312,64 @@ async function featurePayload(
   return payload;
 }
 
-export async function getInternalResults(session: Session): Promise<AcademicRecord[]> {
-  const payload = await featurePayload(
-    session,
-    ENDPOINTS.internalMarks,
-    { semId: session.profile.semId ?? '' },
-    true,
-  );
-  return normalizeInternalMarks(payload);
+export async function getResultSemesters(session: Session): Promise<Semester[]> {
+  const payload = await apiRequest<JsonRecord | JsonRecord[]>({
+    baseUrl: session.baseUrl,
+    path: ENDPOINTS.semesters,
+    method: 'GET',
+    token: session.token,
+    etag: true,
+    allowArray: true,
+    retries: 1,
+  });
+  return normalizeSemesters(payload);
 }
 
-export async function getSeriesExams(session: Session): Promise<SeriesExam[]> {
-  const payload = await featurePayload(session, ENDPOINTS.seriesExam, {
-    semId: session.profile.semId ?? '',
-  });
-  return normalizeSeriesExams(payload);
+/** Load only the selected category; each endpoint keeps its own wire shape. */
+export async function getResultCategory(
+  session: Session,
+  category: ResultCategory,
+  semesterId: string,
+): Promise<ResultData> {
+  const request = resultRequest(category, semesterId);
+  const payload = request.form
+    ? await apiRequest<JsonRecord>({
+        baseUrl: session.baseUrl,
+        path: request.path,
+        method: 'POST',
+        token: session.token,
+        form: request.form,
+        etag: true,
+        retries: 1,
+      })
+    : await featurePayload(
+        session,
+        request.path,
+        request.body ?? {},
+        request.allowArray ?? false,
+      );
+
+  switch (category) {
+    case 'internal':
+      return { kind: 'marks', items: normalizeInternalMarks(payload) };
+    case 'assignment':
+      return { kind: 'marks', items: normalizeAssignmentResults(payload) };
+    case 'moduleTest':
+      return { kind: 'marks', items: normalizeModuleTestResults(payload) };
+    case 'seasonal':
+      return { kind: 'marks', items: normalizeSeasonalResults(payload) };
+    case 'selfStudy':
+      return { kind: 'marks', items: normalizeSelfStudyResults(payload) };
+    case 'tutorial':
+      return { kind: 'marks', items: normalizeTutorialResults(payload) };
+    case 'series':
+      return { kind: 'series', items: normalizeSeriesExams(payload) };
+    case 'university':
+      if (Array.isArray(payload)) {
+        throw new ApiError('parse', 'SJCET Etlab sent an unexpected university result.');
+      }
+      return { kind: 'university', result: normalizeUniversityResult(payload) };
+  }
 }
 
 export async function getFees(session: Session): Promise<FeeRecord[]> {

@@ -6,17 +6,17 @@ import {
   getAttendance,
   getDashboard,
   getFees,
-  getInternalResults,
   getLeaveHistory,
   getNotices,
-  getSeriesExams,
+  getResultCategory,
+  getResultSemesters,
   getStudyMaterials,
   getTimetable,
   login,
   type LoginCredentials,
 } from '@/lib/api/etlab';
 import { ApiError } from '@/lib/api/types';
-import type { Assignment, Session } from '@/lib/api/types';
+import type { Assignment, ResultCategory, Session } from '@/lib/api/types';
 import { useSession } from '@/stores/auth';
 
 const MINUTE = 60_000;
@@ -43,8 +43,9 @@ export const queryKeys = {
   assignments: (session: Session) => ['assignments', ...scope(session)] as const,
   timetable: (session: Session, month: string) => ['timetable', ...scope(session), month] as const,
   notices: (session: Session) => ['notices', ...scope(session)] as const,
-  internalResults: (session: Session) => ['internal-results', ...scope(session)] as const,
-  seriesExams: (session: Session) => ['series-exams', ...scope(session)] as const,
+  resultSemesters: (session: Session) => ['result-semesters', ...scope(session)] as const,
+  results: (session: Session, category: ResultCategory, semesterId: string) =>
+    ['results', ...scope(session), category, semesterId] as const,
   fees: (session: Session) => ['fees', ...scope(session)] as const,
   leave: (session: Session) => ['leave', ...scope(session)] as const,
   materials: (session: Session) => ['materials', ...scope(session)] as const,
@@ -110,21 +111,22 @@ export function useNotices() {
   });
 }
 
-export function useInternalResults() {
+export function useResultSemesters() {
   const session = useSession();
   return useQuery({
-    queryKey: queryKeys.internalResults(session),
-    queryFn: () => getInternalResults(session),
-    staleTime: 10 * MINUTE,
+    queryKey: queryKeys.resultSemesters(session),
+    queryFn: () => getResultSemesters(session),
+    staleTime: 60 * MINUTE,
     retry: (count, error) => !isAuthFailure(error) && count < 1,
   });
 }
 
-export function useSeriesExams() {
+export function useResultCategory(category: ResultCategory, semesterId: string) {
   const session = useSession();
   return useQuery({
-    queryKey: queryKeys.seriesExams(session),
-    queryFn: () => getSeriesExams(session),
+    queryKey: queryKeys.results(session, category, semesterId),
+    queryFn: () => getResultCategory(session, category, semesterId),
+    enabled: Boolean(semesterId),
     staleTime: 10 * MINUTE,
     retry: (count, error) => !isAuthFailure(error) && count < 1,
   });

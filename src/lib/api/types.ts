@@ -220,9 +220,66 @@ export type SeriesExamResponse = {
 export type AcademicRecord = {
   id: string;
   subject?: string;
+  title?: string;
   score?: string;
   maximum?: string;
 };
+
+export type Semester = {
+  id: string;
+  name?: string;
+};
+
+export type UniversitySummary = {
+  cgpa?: string;
+  credit?: string;
+  passStatus?: string;
+  sgpa?: string;
+  totalInternal?: string;
+};
+
+export type UniversitySubject = {
+  id: string;
+  subject?: string;
+  status?: string;
+};
+
+export type UniversityExamSubject = {
+  id: string;
+  attendance?: string;
+  credits?: string;
+  internalMark?: string;
+  status?: string;
+  subject?: string;
+  universityMark?: string;
+};
+
+export type UniversityExam = {
+  id: string;
+  name?: string;
+  subjects: UniversityExamSubject[];
+};
+
+export type UniversityResult = {
+  summary?: UniversitySummary;
+  subjects: UniversitySubject[];
+  exams: UniversityExam[];
+};
+
+export type ResultCategory =
+  | 'internal'
+  | 'assignment'
+  | 'moduleTest'
+  | 'seasonal'
+  | 'selfStudy'
+  | 'tutorial'
+  | 'series'
+  | 'university';
+
+export type ResultData =
+  | { kind: 'marks'; items: AcademicRecord[] }
+  | { kind: 'series'; items: SeriesExam[] }
+  | { kind: 'university'; result: UniversityResult };
 
 export type FeeRecord = {
   id: string;
